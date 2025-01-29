@@ -1,6 +1,6 @@
 import os
 import sys
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 from fnmatch import fnmatchcase
 from distutils.util import convert_path
 
@@ -52,9 +52,8 @@ setup(name='docassemble.ssioverpaymentwaiver',
       author_email='qsteenhuis@gmail.com',
       license='The MIT License',
       url='https://docassemble.org',
-      packages=find_packages(),
-      namespace_packages=['docassemble'],
-      install_requires=['docassemble.GithubFeedbackForm>=0.4.0', 'docassemble.income>=0.0.36', 'docassemble.ssa'],
+      packages=find_namespace_packages(),
+      install_requires=['docassemble.GithubFeedbackForm>=0.4.1.1', 'docassemble.income>=0.0.36', 'docassemble.ssa'],
       zip_safe=False,
       package_data=find_package_data(where='docassemble/ssioverpaymentwaiver/', package='docassemble.ssioverpaymentwaiver'),
      )

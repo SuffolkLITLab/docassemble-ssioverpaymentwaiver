@@ -4,22 +4,25 @@ metadata:
   short title: Overpayment Waiver or Change
   revision_date: 2022-01-15
   description: |
-    If you were paid too much money by the Social Security Administration and are required to pay it back, you can use this form to request a change in the repayment amount or a waiver of part of the overpayment.
+    If you were paid too much money by the Social Security Administration and are        required to pay it back, you can use this form to request a change in the            repayment amount or a waiver of part of the overpayment.
   can_i_use_this_form: |
     You can use this form if:
     
     * You agree that you were overpaid
-    * You want to ask the Social Security Administration to waive the overpayment or reduce the amount you have to pay back
-    * You have received a notice from the Social Security Administration that you were overpaid
+    * You want to ask the Social Security Administration to waive the overpayment or       reduce the amount you have to pay back
+    * You have received a notice from the Social Security Administration that you          were overpaid
     * You have information about your income, expenses, and assets
+  help: |
+      [What can I do if I’m notified that I have an overpayment](https://www.ssa.gov/faqs/en/questions/KA-02345.html)
+      [Understanding SSI Overpayments](https://www.ssa.gov/ssi/text-overpay-ussi.htm)
   before_you_start: |
     Before you start, you should find:
     
     1. The notice from Social Security that says that you owe money.
-    1. Information about the money that you get each month, and the money that
+    2. Information about the money that you get each month, and the money that
     people who live with you get.
-    1. Find out if you get SSI, SSDI, or both.
-    1. Information about how you save and spend money, such as bank statements
+    3. Find out if you get SSI, SSDI, or both.
+    4. Information about how you save and spend money, such as bank statements
     and bills.
   maturity: production
   estimated_completion_minutes: 30
@@ -212,7 +215,6 @@ code: |
   client.address.address
   ssa_office.address.address  
   preview_pdf
-  
   run_signature_flow
   
   store_variables_snapshot(data={'zip':client.address.zip,
@@ -312,21 +314,31 @@ subquestion: |
 id: client_has_overpayment_notice
 question: |
   Do you have the notice from Social Security administration with you?
+help: |
+      To find this information, look for the notice from Social Security that says         you owe them money
 fields:
   - no label: client_has_overpayment_notice
     datatype: yesnoradio
-  - What is the date on the notice?: overpayment_notice_date
+  - What is the __date__ on the notice?: overpayment_notice_date
     datatype: date
     show if: client_has_overpayment_notice
-  - What is the _first_ month you were overpaid? (include year and month - ex.            01/2024): overpayment_notice_first_overpayment
+  - What is the __first__ month you were overpaid?: overpayment_notice_first_overpayment
+    help: |
+      Include the year and month of your __first__ overpayment - *example*: 01/2024
     show if: client_has_overpayment_notice
-  - What is the _last_ month you were overpaid? (include year and month - ex.             06/2024): overpayment_notice_last_overpayment
+  - What is the __last__ month you were overpaid?: overpayment_notice_last_overpayment
+    help: |
+      Include the year and month of your __last__ overpayment - *example*: 06/2024
     show if: client_has_overpayment_notice
-  - If you were only overpaid for one month, what is the month? (include year and        month - ex. 04/2024): overpayment_notice_exact_month
+  - If you were only overpaid for one month, what is the month?: overpayment_notice_exact_month
     required: False  
+    help: |
+      Only answer here if you were overpaid for 1 month. Include the year and month        of the only month you were overpaid - *example* 04/2024
     show if: client_has_overpayment_notice    
-  - What is the total dollar amount you were overpaid? (ex $1000.00) :                   notice_overpayment_amount
+  - What is the total dollar amount you were overpaid?:                   notice_overpayment_amount
     datatype: currency
+    help: |
+      Add up the amount you were overpaid each month and put the total here -              *example* $10000
     show if: client_has_overpayment_notice
 ---
 id: will_receive_inheritance
@@ -473,7 +485,11 @@ subquestion: |
   If Social Security says you owe them money, this website can help you ask Social Security to: 
   
   1. **waive an overypayment**, meaning that you don’t have to pay the money back, or
-  1. **lower the repayment rate**, meaning that you have to pay less back to Social Security every month
+  1. **lower the repayment rate**, meaning that you have to pay less back to Social    Security every month
+   
+  [Understanding SSI Overpayments](https://www.ssa.gov/ssi/text-overpay-ussi.htm)
+
+  [What can I do if I have an Overpayment Notice?](https://www.ssa.govfaqs/en/questions/KA-02345.html)
   
   <div class="alert alert-warning" role="alert">
   :info-circle:  
@@ -489,10 +505,10 @@ subquestion: |
   ### Before you start, you should find:
   
   1. The notice from Social Security that says that you owe money.
-  1. Information about the money that you get each month, and the money that
+  2. Information about the money that you get each month, and the money that
   people who live with you get.
-  1. Find out if you get SSI, SSDI, or both. 
-  1. Information about how you save and spend money, such as bank statements
+  3. Find out if you get SSI, SSDI, or both. 
+  4. Information about how you save and spend money, such as bank statements
   and bills.
 
   If you are unsure whether you receive SSI, SSDI, or both you can call Social         Security at ${tel("1-855-807-8807") } or check the [Social Security                  website](https://www.ssa.gov/myaccount/)
@@ -590,7 +606,11 @@ question: |
   % endif
 subquestion: |
   Choose the answer that best matches what you understand about what happened.
-  Even if you agree that ${recordee} _was_ overpaid, you are _NOT_ agreeing here       that you need to pay the Social Security Administration back.
+
+  If you do not agree that ${recordee} __was__ overpaid, you should file an 
+  [appeal](https://secure.ssa.gov/iApplNMD/start)
+  
+  If you agree that ${recordee} was overpaid, they are responsible for repaying that amount, but they can still request a waiver or to lower the repayment rate by completing this interview.
 field: agree_overpaid
 choices:
   - ${ disagree_overpaid_template }: False
@@ -618,7 +638,7 @@ question: |
   What are you asking the Social Security Administration to let you do?
 field: client_goals
 choices:
-  - "**Waive an overypayment**, meaning that you don't have to pay the money back": waive_overpayment
+  - "**Waive an overpayment**, meaning that you don't have to pay the money back": waive_overpayment
   - "**Lower the repayment rate**, meaning that you have to pay less back every month": reduce_overpayment
 ---
 code: |
@@ -1635,28 +1655,28 @@ fields:
 id: preview pdf
 continue button field: preview_pdf
 question: |
-  Review your form before you sign it
+  Review your form before you Download it
 subquestion: |
-  Here is a preview of the form you'll sign on the next page. 
+  ### Here is a preview of your form:
+  
+  Click to edit your answers 
   
   ${ ssa_634_template['preview'] if only_change_monthly_due else ssa_632_template['preview'] }
-   
-  Remember to come back to this window to continue and sign your form.
   
-  When you sign this form you are saying the following: 
+  ### When you submit this form you are saying the following: 
   
-  "I declare under penalty of perjury that I have examined all the information on this form, and on any accompanying statements or forms, and it is true and correct to the best of my knowledge. I understand that anyone who knowingly gives a false statement about a material fact in this information, or causes someone else to do so, commits a crime and may be subject to a fine or imprisonment."
+  "I declare under penalty of perjury that I have examined all the information on       this form, and on any accompanying statements or forms, and it is true and           correct to the best of my knowledge. I understand that anyone who knowingly gives    a false statement about a material fact in this information, or causes someone       else to do so, commits a crime and may be subject to a fine or imprisonment."
 ---
 id: download pdf
 event: download_pdf
 question: |
-  Your document is ready
+  Your form is ready
 subquestion: |
-  Download and print 2 copies of your Overpayment Request document below.
+  Download and print 2 copies of your Overpayment Request Form below along with a      document outlining your Next Steps.
   
   ### Before you send this to the Social Security Administration
   
-  1. Download and print 2 copies of the Financial Records Authorization.
+  1. Download and print 2 copies of your Request.
   2. Collect all supporting documents that will be sent with your Request including    the notice of the overpayment.
   3. Make 2 copies of all supporting documents. Send one copy of each document to      your local Social Security office at                 ${ssa_office.address.on_one_line(show_country=False) }. 
   4. Keep one copy of each document for yourself in a safe place.  

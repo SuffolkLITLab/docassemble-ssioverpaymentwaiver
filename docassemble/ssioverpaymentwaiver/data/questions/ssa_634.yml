@@ -180,6 +180,7 @@ attachment:
       - receive_support_loan_agree_no: ${ not isinstance(optional("client.support_under_loan"), DAEmpty) }
       - receive_support_amount: ${ optional("client.receive_support_amount") }
       - receive_support_source: ${ optional("client.receive_support_source") }
+      - Remarks: ${ income_remarks }
       - institution_name_address_1: ${ f"{assets.item(0).institution_name}\n{ assets.item(0).institute_address}"}
       - account_owner_1: ${ assets.item(0).owner }
       - balance_value_1: ${ assets.item(0).balance }
@@ -246,7 +247,7 @@ attachment:
       - real_estate_value_3: ${currency(real_estate.item(2).market_value)}
       - real_estate_loan_balance_3: ${currency(real_estate.item(2).balance)}
       - real_estate_income_3: ${currency(real_estate.item(2).amount(period_to_use=12))}
-      - real_estate_value_total: ${ currency(real_estate.total()) }
+      - real_estate_countable_value: ${ currency(real_estate.total()) }
       - has_interest_business_prop: ${ properties.there_are_any }
       - has_interest_business_prop_no: ${ not properties.there_are_any }
       - property_owner_1: ${properties.item(0).owner}
@@ -264,7 +265,7 @@ attachment:
       - property_value_3: ${currency(properties.item(2).market_value)}
       - property_loan_balance_3: ${currency(properties.item(2).balance)}
       - property_income_3: ${currency(properties.item(2).amount(period_to_use=12))}
-      - property_value_total: ${ currency(properties.total()) }
+      - property_countable_value: ${ currency(properties.total()) }
       - user_employed: ${client.jobs.there_are_any}
       - user_employed_no: ${ not client.jobs.there_are_any }
       - user_employer_name_address_phone: ${"\n".join([job.name_address_phone() for job in client.jobs])}

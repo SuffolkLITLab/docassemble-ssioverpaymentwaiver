@@ -896,8 +896,7 @@ subquestion: |
   In the next section, we will need to ask detailed information about how you,
   your spouse, and any household members earn money, as well as your household
   expenses. You will need to list any money you or a household member earns from 
-  any source, including things like odd jobs, interest on bank accounts, and informal 
-  payments for household expenses.
+  any source, including things like odd jobs, interest on bank accounts, and           informal payments for household expenses.
   
   Take a minute to make sure you have any pay stubs, tax returns or receipts for
   self-employment income, bank statements, and any monthly bills you pay.
@@ -1659,7 +1658,7 @@ question: |
 subquestion: |
   ### Here is a preview of your form:
   
-  Click to edit your answers 
+  Click to see your answers 
   
   ${ ssa_634_template['preview'] if only_change_monthly_due else ssa_632_template['preview'] }
   
@@ -1681,7 +1680,7 @@ subquestion: |
   3. Make 2 copies of all supporting documents. Send one copy of each document to      your local Social Security office at                 ${ssa_office.address.on_one_line(show_country=False) }. 
   4. Keep one copy of each document for yourself in a safe place.  
 attachment code: |
-  ssa_634_template['final'] if only_change_monthly_due else [ssa_632_template['final'], ssa_632_addendum] if len(overflow_fields) else ssa_632_template['final']
+  [next_steps_attachment, ssa_634_template['final']] if only_change_monthly_due else [next_steps_attachment, ssa_632_template['final'], ssa_632_addendum] if len(overflow_fields) else [next_steps_attachment, ssa_632_template['final']]
 allow emailing: False
 buttons:
   - Logout: logout
@@ -1783,6 +1782,15 @@ code: |
     
       
 ---
+attachment: 
+  - name: Next Steps
+    filename: Next Steps
+    docx template file: Next-Steps.docx
+    skip undefined: True
+    variable name: next_steps_attachment
+    valid formats:
+      - pdf
+---
 need: 
   - grand_total
 attachments:
@@ -1792,7 +1800,7 @@ attachments:
     variable name: ssa_632_addendum
   - name: SSA-632 Request For Waiver Of Overpayment Recovery Or Change In Repayment Rate
     filename: SSA-632
-    skip undefined: True
+    # skip undefined: True
     variable name: ssa_632_template[i]
     pdf template file: ssa-632.pdf
     # checkbox export value: "On"

@@ -890,8 +890,8 @@ fields:
     default: 12
     code: |
       period_list()
-  - Please describe your other expense: expenses[i].explanation
-    datatype: area
+  - What is the name of this expense?: expenses[i].explanation
+    datatype: text
     maxlength: 270
     show if:
       code: |

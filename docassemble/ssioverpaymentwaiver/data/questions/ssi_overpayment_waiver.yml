@@ -607,10 +607,10 @@ question: |
 subquestion: |
   Choose the answer that best matches what you understand about what happened.
 
-  If you do not agree that ${recordee} __was__ overpaid, you should file an 
+  If you __do not agree__ that ${recordee} __was__ overpaid, you should file an 
   [appeal](https://secure.ssa.gov/iApplNMD/start)
   
-  If you agree that ${recordee} was overpaid, they are responsible for repaying that amount, but they can still request a waiver or to lower the repayment rate by completing this interview.
+  If you __agree__ that ${recordee} was overpaid, __you are agreeing to repay that amount__, but you can still request a waiver or to lower the repayment rate by completing this interview.
 field: agree_overpaid
 choices:
   - ${ disagree_overpaid_template }: False
@@ -2269,7 +2269,7 @@ attachments:
       - "expense_cc_minimum": ${ currency(expenses.total(type='credit cards',period_to_use=12), decimals=False) }
       - "expense_other":  ${ currency(expenses.total(type='other',period_to_use=12), decimals=False)}
       - "expense_total": ${ expenses.total(period_to_use=12)}
-      - "expense_remarks": ${ expense_remarks } 
+      - "expense_remarks": ${ expense_remarks }
       - "monthly_income": ${thousands(grand_total)} 
       - "monthly_expenses": ${thousands(monthly_expenses)}
       - "adjusted_expenses": ${thousands(adjusted_expenses)}

@@ -11,6 +11,7 @@ code: |
   overpayment_affordable_amount
   cash_amount_634
 
+  nav.set_section('Financial information')
   financial_statement_questions
 
   # expenses > income
@@ -229,7 +230,7 @@ attachment:
       - vehicle_pv_3: ${currency(vehicles.item(2).value)}
       - vehicle_loan_balance_3: ${currency(vehicles.item(2).balance)}
       - vehicle_purpose_3: ${vehicles.item(2).primary_purpose}
-      - vehicle_countable_value: ${ vehicles.total() }
+      - vehicle_countable_value: ${ currency(vehicles.total() - sum([vehicles.balance for vehicle in vehicles])) }
       - hold_any_real_estate: ${ real_estate.there_are_any }
       - hold_any_real_estate_no: ${ not real_estate.there_are_any }
       - real_estate_owner_1: ${real_estate.item(0).owner}
@@ -247,7 +248,7 @@ attachment:
       - real_estate_value_3: ${currency(real_estate.item(2).market_value)}
       - real_estate_loan_balance_3: ${currency(real_estate.item(2).balance)}
       - real_estate_income_3: ${currency(real_estate.item(2).amount(period_to_use=12))}
-      - real_estate_countable_value: ${ currency(real_estate.total()) }
+      - real_estate_countable_value: ${ currency(real_estate.market_value_total() - real_estate.balance_total()) }
       - has_interest_business_prop: ${ properties.there_are_any }
       - has_interest_business_prop_no: ${ not properties.there_are_any }
       - property_owner_1: ${properties.item(0).owner}
@@ -265,7 +266,7 @@ attachment:
       - property_value_3: ${currency(properties.item(2).market_value)}
       - property_loan_balance_3: ${currency(properties.item(2).balance)}
       - property_income_3: ${currency(properties.item(2).amount(period_to_use=12))}
-      - property_countable_value: ${ currency(properties.total()) }
+      - property_countable_value: ${ currency(properties.market_value_total() - properties.balance_total()) }
       - user_employed: ${client.jobs.there_are_any}
       - user_employed_no: ${ not client.jobs.there_are_any }
       - user_employer_name_address_phone: ${"\n".join([job.name_address_phone() for job in client.jobs])}
@@ -303,8 +304,10 @@ attachment:
       - expense_cc_minimum: ${currency(expenses.total(period_to_use=12, type="credit card"))}
       - expense_other: ${currency(expenses.total(period_to_use=12, type="other"))}
       - expenses_total: ${currency(expenses.total(period_to_use=12))}
-      - monthly_income: ${ currency( user_income_total) } # ${ currency(client.incomes.total(period_to_use=12) + properties.total(period_to_use=12) + real_e#state.total(period_to_use=12) + assets.total(period_to_use=12) ) }
-      - monthly_expenses: ${ currency(expenses.total(period_to_use=12)) } # TODO
+      - expense_other_description: ${ "; ".join([expense.explanation for expense in expenses if expense.type == "other"]) }
+      - expense_other_details: ${ expense_other_details }
+      - monthly_income: ${ currency( user_income_total) } 
+      - monthly_expenses: ${ currency(expenses.total(period_to_use=12)) }
       - monthly_total_net: ${ currency( user_income_total - expenses.total(period_to_use=12) ) }
       - expenses_exceed_income_explanation: |
           % if expenses_exceed_income:

@@ -929,9 +929,6 @@ fields:
 id: more expenses info
 question: |
   Optional: tell SSA more about your expenses
-subquestion: |
-  For example, if any of the expenses you listed are very large or 
-  uncommon, give any explanation that may be helpful to the agency.
 fields:
   - Write down any explanation you want to give about a large or unusual expense: expense_other_details
     datatype: area

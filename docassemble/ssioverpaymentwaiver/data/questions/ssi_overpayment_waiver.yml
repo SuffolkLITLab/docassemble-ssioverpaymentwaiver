@@ -487,10 +487,6 @@ subquestion: |
   
   1. **waive an overypayment**, meaning that you don’t have to pay the money back, or
   1. **lower the repayment rate**, meaning that you have to pay less back to Social    Security every month
-   
-  [Understanding SSI Overpayments](https://www.ssa.gov/ssi/text-overpay-ussi.htm)
-
-  [What can I do if I have an Overpayment Notice?](https://www.ssa.gov/faqs/en/questions/KA-02345.html)
   
   <div class="alert alert-warning" role="alert">
   :info-circle:  
@@ -513,6 +509,10 @@ subquestion: |
   and bills.
 
   If you are unsure whether you receive SSI, SSDI, or both you can call Social         Security at ${tel("1-855-807-8807") } or check the [Social Security                  website](https://www.ssa.gov/myaccount/)
+
+  [Understanding SSI Overpayments](https://www.ssa.gov/ssi/text-overpay-ussi.htm)
+  
+  [What can I do if I have an Overpayment Notice?](https://www.ssa.gov/faqs/en/questions/KA-02345.html)
   
 fields: 
   - To continue you must accept the [terms of use](https://vlpnet.org/tos-for-guided-interviews/): intro_screen

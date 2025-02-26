@@ -21,6 +21,7 @@ code: |
   expect_inheritance
   cannot_convert
 
+  nav.set_section('Finishing up')
   # download_634
   ssa_634 = True
 ---

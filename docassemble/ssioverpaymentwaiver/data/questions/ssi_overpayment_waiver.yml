@@ -122,35 +122,34 @@ code: |
     client_lives_with_overpaid_person
   recordee.name.first
     
-    
-  #recordee.ssn
-  #recordee.claim_number    
+  recordee.ssn
+  recordee.claim_number    
   
   if recordee == client:
     client_is_rep_payee = False
     
-  
   nav.set_section('Information about the overpayment')
-  client_has_overpayment_notice  
+  client_has_overpayment_notice
+  
+  client_goals
   if only_change_monthly_due:
     #explain_ssa_634
     ssa_634
+    nav.set_section('Finishing up')
     saw_signature_choice
     if not (signature_choice == 'paper'):
       client.signature    
     preview_pdf
     download_pdf
-  #else:
-  #  explain_ssa_632
-
+    
   payment_type
   overpayment_reason
-  #overpayment_explanation
+  # overpayment_explanation
 
   if client_is_rep_payee:
     overpayment_benefits_used_for
 
-  if informed_ssa:
+  if waive_overpayment + informed_ssa:
     benefits_changed_after_contact
 
   # Not used on new form
@@ -159,12 +158,11 @@ code: |
   if possess_overpayment:
     pay_ssa_explanation
   
+  
   overpayment_pay_less_reasons
   cant_pay_at_all
   overpayment_waiver_second_request
-
   first_overpayment
-
   gave_cash_after_notice
   will_receive_inheritance
   
@@ -223,15 +221,15 @@ code: |
     'client_is_rep_payee':client_is_rep_payee,
     'client_goals':client_goals,
     'agree_overpaid': agree_overpaid,
-    'payment_type':payment_type.true_values(),
-    'overpayment_reason': overpayment_reason,
-    'possess_overpayment': possess_overpayment,
-    'overpayment_pay_less_reasons': overpayment_pay_less_reasons,
-    'informed_ssa':informed_ssa,
-    'cant_pay_at_all': cant_pay_at_all,
-    'informed_ssa': informed_ssa,
-    'first_overpayment': first_overpayment,
-    'receives_benefits': receives_benefits,
+    'payment_type':showifdef("payment_type.true_values()"),
+    'overpayment_reason': showifdef("overpayment_reason"),
+    'possess_overpayment': showifdef("possess_overpayment"),
+    'overpayment_pay_less_reasons': showifdef("overpayment_pay_less_reasons"),
+    'informed_ssa': showifdef("informed_ssa"),
+    'cant_pay_at_all': showifdef("cant_pay_at_all"),
+    'informed_ssa': showifdef("informed_ssa"),
+    'first_overpayment': showifdef("first_overpayment"),
+    'receives_benefits': showifdef("receives_benefits"),
     'date':today(),
     })  
   download_pdf
@@ -328,9 +326,9 @@ fields:
       Include the year and month of your __first__ overpayment - *example*: 01/2024
     show if: client_has_overpayment_notice
   - What is the __last__ month you were overpaid?: overpayment_notice_last_overpayment
+    show if: client_has_overpayment_notice
     help: |
       Include the year and month of your __last__ overpayment - *example*: 06/2024
-    show if: client_has_overpayment_notice
   - If you were only overpaid for one month, what is the month?: overpayment_notice_exact_month
     required: False  
     help: |
@@ -504,15 +502,17 @@ subquestion: |
   1. The notice from Social Security that says that you owe money.
   2. Information about the money that you get each month, and the money that
   people who live with you get.
-  3. Find out if you get SSI, SSDI, or both. 
-  4. Information about how you save and spend money, such as bank statements
+  3. Information about how you save and spend money, such as bank statements
   and bills.
+  4. Find out if you get SSI, SSDI, or both.
 
   If you are unsure whether you receive SSI, SSDI, or both you can call Social         Security at ${tel("1-855-807-8807") } or check the [Social Security                  website](https://www.ssa.gov/myaccount/)
 
   [Understanding SSI Overpayments](https://www.ssa.gov/ssi/text-overpay-ussi.htm)
   
   [What can I do if I have an Overpayment Notice?](https://www.ssa.gov/faqs/en/questions/KA-02345.html)
+
+  __Warning__: if you click any links to other sites you will have to come back here to   keep going
   
 fields: 
   - To continue you must accept the [terms of use](https://vlpnet.org/tos-for-guided-interviews/): intro_screen
@@ -575,9 +575,7 @@ subquestion:
   Whose account is the overpayment on?
   Look at the letter about the overpayment that you got from Social Security.
   Look for a Social Security or Claim Number on the letter. Write down the 
-  name 
-  of the person who has that
-  Social Security number.
+  name of the person who has that Social Security number.
 fields:
   - First name: recordee.name.first
   - Middle name: recordee.name.middle
@@ -606,12 +604,10 @@ question: |
   Do you agree that ${recordee} got too much money from Social Security?
   % endif
 subquestion: |
-  Choose the answer that best matches what you understand about what happened.
-
   If you __do not agree__ that ${recordee} __was__ overpaid, you should file an 
   [appeal](https://secure.ssa.gov/iApplNMD/start)
   
-  If you __agree__ that ${recordee} was overpaid, __you are agreeing to repay that amount__, but you can still request a waiver or to lower the repayment rate by completing this interview.
+  If you __agree__ that ${recordee} was overpaid, __you are agreeing to repay that     amount__, but you can still request a waiver or to lower the repayment rate by       finishing this interview.
 field: agree_overpaid
 choices:
   - ${ disagree_overpaid_template }: False
@@ -644,6 +640,7 @@ choices:
 ---
 code: |
   only_change_monthly_due = client_goals == 'reduce_overpayment'
+  waive_overpayment = client_goals == 'waive_overpayment'
 ---
 comment: |
   Not sure we will leave this in--somewhat in the nature

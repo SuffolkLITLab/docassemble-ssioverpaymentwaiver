@@ -138,7 +138,7 @@ attachment:
     editable: False
     fields:
       - requestor_name: ${ recordee.name }
-      - requestor_ssn: ${ recordee.ssn }
+     # - requestor_ssn: ${ recordee.ssn }
       - requestor_claim_number: ${ recordee.claim_number }
       - is_overpaid_person: ${ recordee == client }
       - is_overpaid_person_no: ${ not recordee == client }

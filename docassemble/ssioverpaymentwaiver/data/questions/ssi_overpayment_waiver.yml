@@ -122,7 +122,6 @@ code: |
     client_lives_with_overpaid_person
   recordee.name.first
     
-  recordee.ssn
   recordee.claim_number    
   
   if recordee == client:
@@ -775,23 +774,6 @@ fields:
   - no label: overpayment_benefits_used_for
     datatype: area
     maxlength: 86
----
-id: social security number
-generic object: Individual
-question: |
-  Social Security Number for ${x}
-subquestion: |
-  What is ${x}'s Social Security Number?
-fields:
-  - SSN: x.ssn
-    validate: is_valid_ssn
-    datatype: ssn  
-under: |
-  {Why} do we need this?
-terms:
-  - Why: |
-      The Social Security Administration needs this number in order to 
-      apply this overpayment waiver request to the right account.
 ---
 id: claim number
 generic object: Individual
@@ -1652,15 +1634,15 @@ fields:
 id: preview pdf
 continue button field: preview_pdf
 question: |
-  Review your form before you Download it
+  Review your form
 subquestion: |
-  ### Here is a preview of your form:
+  <h2 class="h4">Here is what your form will look like:</h2>
   
-  Click to see your answers 
+  Click to see your answers. Change any wrong answers by going back to the             questions.  
   
   ${ ssa_634_template['preview'] if only_change_monthly_due else ssa_632_template['preview'] }
   
-  ### When you submit this form you are saying the following: 
+  <h2 class="h4">When you submit this form you are saying:</h2> 
   
   "I declare under penalty of perjury that I have examined all the information on       this form, and on any accompanying statements or forms, and it is true and           correct to the best of my knowledge. I understand that anyone who knowingly gives    a false statement about a material fact in this information, or causes someone       else to do so, commits a crime and may be subject to a fine or imprisonment."
 ---
@@ -1669,14 +1651,16 @@ event: download_pdf
 question: |
   Your form is ready
 subquestion: |
-  Download and print 2 copies of your Overpayment Request Form below along with a      document outlining your Next Steps.
+  Below you will find a link to your overpayment request form and a document with      next steps. Download and print 2 copies of these documents.
   
-  ### Before you send this to the Social Security Administration
+  <h2 class="h4">Before you send your form to the Social Security Administration:</h2>
   
-  1. Download and print 2 copies of your Request.
-  2. Collect all supporting documents that will be sent with your Request including    the notice of the overpayment.
-  3. Make 2 copies of all supporting documents. Send one copy of each document to      your local Social Security office at                 ${ssa_office.address.on_one_line(show_country=False) }. 
-  4. Keep one copy of each document for yourself in a safe place.  
+  1. Download and print 2 copies of your form.
+  2. **Write in your Social Security Number** on page 1, question 1A.
+  3. Collect all supporting documents that will be sent with your form (the            notice of the overpayment, proof of income or expenses, etc).
+  4. Make 2 copies of all supporting documents. 
+  5. Send one copy of your overpayment request and the supporting documents to your local Social Security office at ${ssa_office.address.on_one_line(show_country=False) }. 
+  6. Keep one copy of each document for yourself in a safe place.  
 attachment code: |
   [next_steps_attachment, ssa_634_template['final']] if only_change_monthly_due else [next_steps_attachment, ssa_632_template['final'], ssa_632_addendum] if len(overflow_fields) else [next_steps_attachment, ssa_632_template['final']]
 allow emailing: False
@@ -1807,7 +1791,7 @@ attachments:
     fields:
       - "record_owner": ${ recordee }
       - "record_claim_number": ${ recordee.claim_number }
-      # - "record_ssn": ${ recordee.ssn }
+    # - "record_ssn": ${ recordee.ssn }
       - "client_is_overpaid_person_yes": ${ client_is_overpaid_person }
       - "client_is_overpaid_no": ${ not client_is_overpaid_person }
       - "client_relationship_parent": |

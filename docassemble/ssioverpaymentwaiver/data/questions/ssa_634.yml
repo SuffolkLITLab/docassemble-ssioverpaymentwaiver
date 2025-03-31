@@ -231,7 +231,7 @@ attachment:
       - vehicle_pv_3: ${currency(vehicles.item(2).value)}
       - vehicle_loan_balance_3: ${currency(vehicles.item(2).balance)}
       - vehicle_purpose_3: ${vehicles.item(2).primary_purpose}
-      - vehicle_countable_value: ${ currency(vehicles.total() - sum([vehicles.balance for vehicle in vehicles])) }
+      - vehicle_countable_value: ${ currency(float(vehicles.total()) - sum([vehicle.balance for vehicle in vehicles])) }
       - hold_any_real_estate: ${ real_estate.there_are_any }
       - hold_any_real_estate_no: ${ not real_estate.there_are_any }
       - real_estate_owner_1: ${real_estate.item(0).owner}

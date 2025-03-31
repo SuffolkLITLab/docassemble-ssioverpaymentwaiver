@@ -430,7 +430,7 @@ code: |
 ---
 id: asset types
 question: |
-  Assets (accounts and things that you may own)
+  What kind of Assets do you own?
 subquestion: |
   Do you, your spouse, or someone in your household own any of the following?
 fields:
@@ -453,6 +453,8 @@ if: only_change_monthly_due
 id: expenses types
 question: |
   What kind of expenses do you have?
+subquestion: |
+  How is your money spent?
 fields:
   - no label: expenses_types
     datatype: checkboxes

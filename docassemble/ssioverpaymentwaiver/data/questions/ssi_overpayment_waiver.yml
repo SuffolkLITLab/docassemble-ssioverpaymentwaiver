@@ -251,9 +251,13 @@ content: |
   request to Social Security.
   
 ---
+features:
+  progress bar: True
+---
 id: client_is_overpaid_person
 question: |
   ${ client.familiar() }, are you filing for yourself or someone else?
+progress: 5
 fields:
   - no label: filing_for
     datatype: radio
@@ -312,6 +316,7 @@ subquestion: |
 id: client_has_overpayment_notice
 question: |
   Do you have the notice from Social Security administration with you?
+progress: 10
 help: |
       To find this information, look for the notice from Social Security that says         you owe them money
 fields:

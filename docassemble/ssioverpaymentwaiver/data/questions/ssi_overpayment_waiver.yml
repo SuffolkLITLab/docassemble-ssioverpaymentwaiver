@@ -118,8 +118,6 @@ code: |
   if not agree_overpaid:
     continue_anyway
   
-  if not client_is_overpaid_person:
-    client_lives_with_overpaid_person
   recordee.name.first
     
   recordee.claim_number    
@@ -148,21 +146,16 @@ code: |
   if client_is_rep_payee:
     overpayment_benefits_used_for
 
-  if waive_overpayment + informed_ssa:
+  if waive_overpayment and informed_ssa:
     benefits_changed_after_contact
 
   # Not used on new form
   # overpayment_why_not_at_fault  
   
-  if possess_overpayment:
-    pay_ssa_explanation
-  
-  
   overpayment_pay_less_reasons
   cant_pay_at_all
   overpayment_waiver_second_request
   first_overpayment
-  gave_cash_after_notice
   will_receive_inheritance
   
   nav.set_section('Financial information')
@@ -220,9 +213,7 @@ code: |
     'client_is_rep_payee':client_is_rep_payee,
     'client_goals':client_goals,
     'agree_overpaid': agree_overpaid,
-    'payment_type':showifdef("payment_type.true_values()"),
     'overpayment_reason': showifdef("overpayment_reason"),
-    'possess_overpayment': showifdef("possess_overpayment"),
     'overpayment_pay_less_reasons': showifdef("overpayment_pay_less_reasons"),
     'informed_ssa': showifdef("informed_ssa"),
     'cant_pay_at_all': showifdef("cant_pay_at_all"),
@@ -720,24 +711,6 @@ subquestion: |
   representative payee for ${recordee}?
 yesno: client_is_rep_payee
 ---
-id: overpayment info
-question: |
-  Did you have any control over the overpayment?
-fields:
-  - Did the Social Security Administration tell you that you were responsible for the overpayment?: ssa_told_client_must_pay_for_someone_else
-    datatype: yesnoradio
-  - Did you live with ${recordee} when the overpayment happened?: someone_else_lived_with_user
-    datatype: yesnoradio    
-  - Do you live with ${ recordee } right now?: client_lives_with_overpaid_person
-    datatype: yesnoradio
-  - Is ${ recordee } under 18 now?: waiver_for_minor_child
-    datatype: yesnoradio
-  - Did you get any of the overpaid money?:   someone_else_user_received_benefits
-    datatype: yesnoradio
-  - Did you use the money for ${ recordee }?: money_used_for_beneficiary
-    datatype: yesnoradio
-    show if: someone_else_user_received_benefits
----
 id: your situation
 question: |
   % if client_is_overpaid_person:
@@ -745,14 +718,12 @@ question: |
   % else:
   When the overpayment happened, was ${ recordee }:
   % endif
-subquestion: |
-  ()
 fields:
   - label: |
       % if client_is_overpaid_person:
       Select any that applied when you got the overpayment
       % else:
-      Select any that applied to ${ recordee.familiar() } when they got the overpayment
+      Select any that applied to ${ recordee.familiar() } when they got the          overpayment
       % endif
     field: situation_at_overpayment
     datatype: checkboxes
@@ -769,7 +740,7 @@ fields:
     maxlength: 50
     show if:
       variable: situation_at_overpayment
-      is: None
+      is: null
       # TODO: this doesn't work, might need to replace w/ js show if      
 ---
 id: how benefits used
@@ -790,28 +761,6 @@ subquestion: |
 fields:
   - Claim number: x.claim_number
     required: False
----
-id: have overpaid money
-question: |
-  Do you currently have any of the money you were overpaid? 
-fields:
-  - no label: possess_overpayment
-    datatype: yesnoradio
-  - How much do you still have?: possess_overpayment_amount
-    show if: possess_overpayment
-    datatype: currency
-    min: 1
-    step: 1
----
-id: pay ssa explanation
-question: |
-  You will need to pay the Social Security Administration back
-subquestion: |
-  The Social Security administration will ask you to pay back the ${currency(possess_overpayment_amount, decimals=False)}
-  that you said you still have from the overpayment. If that is less than the full 
-  amount of the overpayment you may still need to pay back more, but you can ask for a 
-  payment plan that works for you.
-field: pay_ssa_explanation
 ---
 id: had overpaid money
 question: |
@@ -920,56 +869,12 @@ fields:
     none of the above: |
       ${recordee} no longer receives any money from Social Security
 ---
-id: actions after overpayment notice
-question: |
-  What happened after you got the overpayment notice from Social Security?
-subquestion: |
-  % if not client_is_overpaid_person:
-  Think about what happened after Social Security told you that ${recordee} got
-  too much money.
-  % endif
-fields:  
-  - Did you give away any money after the notice of overpayment?: gave_cash_after_notice
-    datatype: yesnoradio
-  - How much money?: gave_away_cash_amount
-    datatype: currency
-    show if: gave_cash_after_notice
-  - Did you get any cash, (other than money you got from working), after the notice of overpayment?: received_cash_after_notice
-    datatype: yesnoradio
-  - How much cash did you get?: got_cash_amount
-    datatype: currency
-    show if: received_cash_after_notice
-  - Did you sell any real estate after the notice of overpayment?: sold_real_estate
-    datatype: yesnoradio
-  - How much was it worth?: sold_real_estate_amount
-    help: |
-      Enter a dollar amount, or put your best estimate.
-    maxlength: 20    
-    show if: sold_real_estate
-  - Did you give away any real estate after the notice of overpayment?: gave_away_real_estate
-    datatype: yesnoradio
-  - How much was it worth?: gave_away_real_estate_amount
-    help: |
-      Enter a dollar amount, or put your best estimate.
-    maxlength: 20
-    show if: gave_away_real_estate
-  - Did you get any real estate after the notice of overpayment?: received_real_estate
-    datatype: yesnoradio
-  - How much was it worth?: received_real_estate_amount
-    help: |
-      Enter a dollar amount, or put your best estimate.
-    maxlength: 20
-    show if: received_real_estate
----
 id: why cant return overpayment
 question: |
   Why can't you return the overpayment any more?
 subquestion: |
-  You said that when you got the notice, you still had 
-  ${ currency(possessed_overpayment_at_notice_amount, decimals=False) } from the overpayment.
   Using your own words, explain to the Social Security Administration 
-  why you do not think you should have to return the ${ currency(possessed_overpayment_at_notice_amount, decimals=False) }
-  anymore.
+  why you do not think you should have to return the amount they claim you were        overpaid. 
 fields:
   - no label: cant_return_explanation
     datatype: area
@@ -1284,20 +1189,23 @@ subquestion: |
   % endif
 fields:
   - label: |
-      Did you tell the Social Security Administration about the change or event that made you overpaid?
+      Did you tell the Social Security Administration about the change or event that       made you overpaid?
     field: informed_ssa
     datatype: yesnoradio
   - Why not?: did_not_inform_ssa_explanation
     datatype: area
     maxlength: 285
-    show if:
+    required: False
+    show if: 
       variable: informed_ssa
-      is: False          
+      is: False        
   - When? List any dates: told_ssa_dates
     maxlength: 80
-    show if: informed_ssa
+    required: False
+    show if: informed_ssa == 'True'
   - How?: told_ssa_how
-    show if: informed_ssa
+    required: False
+    show if: informed_ssa == 'True'
     datatype: checkboxes
     choices:
       - Phone: phone
@@ -1310,16 +1218,22 @@ fields:
     datatype: area
     maxlength: 344
     show if: told_ssa_how['other']
-  - Do you have any copies of letters or other proof that you told the Social Security Administration about the change?: told_ssa_documentation
+  - Do you have any copies of letters or other proof that you told the Social            Security Administration about the change?: told_ssa_documentation
     datatype: yesnoradio
+    show if:
+      variable: informed_ssa
+      is: True
   - note: |
       **Okay**. Please send a copy with this letter when
       you deliver it to the SSA.
-    show if: told_ssa_documentation
+    show if: 
+      variable: told_ssa_documentation
+      is: True
   - Why not?: told_ssa_documentation_explain_why_cant_send
     datatype: area
     rows: 2
     maxlength: 160
+    required: False
     show if:
       variable: told_ssa_documentation
       is: False
@@ -1343,7 +1257,7 @@ fields:
       % endif
     field: benefits_changed_after_contact
     datatype: yesnoradio
-  - Did you try to let the Social Security Administration know about the overpayment more than once?: benefits_did_not_change_followed_up
+  - Did you try to let the Social Security Administration know about the overpayment     more than once?: benefits_did_not_change_followed_up
     datatype: yesnoradio
     show if:  
       variable: benefits_changed_after_contact
@@ -1787,7 +1701,7 @@ attachments:
     variable name: ssa_632_addendum
   - name: SSA-632 Request For Waiver Of Overpayment Recovery Or Change In Repayment Rate
     filename: SSA-632
-    # skip undefined: True
+    skip undefined: True
     variable name: ssa_632_template[i]
     pdf template file: ssa-632.pdf
     # checkbox export value: "On"
@@ -1842,14 +1756,6 @@ attachments:
           % if not client_is_overpaid_person:
           ${ not someone_else_lived_with_user }
           % endif      
-      - "client_lives_with_overpaid_person_yes": |
-          % if not client_is_overpaid_person:
-          ${ client_lives_with_overpaid_person }
-          % endif
-      - "client_lives_with_overpaid_person_no": |
-          % if not client_is_overpaid_person:
-          ${ not client_lives_with_overpaid_person}
-          % endif
       - "waiver_for_minor_child_yes": |
           % if not client_is_overpaid_person:
           ${ waiver_for_minor_child }
@@ -1860,9 +1766,6 @@ attachments:
           % endif
       - "told_ssa_no": ${ informed_ssa }
       - "told_ssa_yes": ${ not informed_ssa }
-      - "possess_money_yes": ${ possess_overpayment }
-      - "possess_money_no": ${ not possess_overpayment }
-      - "possess_money_amount": ${ possess_overpayment_amount }
       - "money_used_for_beneficiary_yes": |
           % if someone_else_user_received_benefits:
           ${ money_used_for_beneficiary }
@@ -1888,12 +1791,15 @@ attachments:
       - "situation_client_getting_widow_benefits_when_overpaid": ${ situation_at_overpayment['situation_client_getting_widow_benefits_when_overpaid'] }
       - "situation_client_getting_spousal_benefits_when_overpaid": ${ situation_at_overpayment['situation_client_getting_spousal_benefits_when_overpaid'] }
       - "situation_client_getting_ssi_benefits_when_overpaid": ${ situation_at_overpayment['situation_client_getting_ssi_benefits_when_overpaid'] }
-      - "situation_none_of_above_explain": ${ situation_none_of_above_explain }
+      - "situation_none_of_above_explain": ${ showifdef("situation_none_of_above_explain") }
       - "situation_none_of_above": ${ situation_at_overpayment.all_false() }
       - "overpayment_not_my_fault": ${overpayment_pay_less_reasons['not_my_fault'] } # TODO
       - "overpayment_cannot_afford": ${ overpayment_pay_less_reasons['cannot_afford'] }
       - "overpayment_unfair":  ${ overpayment_pay_less_reasons['unfair'] }
-      - "overpayment_why_unfair": ${ overpayment_why_unfair }
+      - "overpayment_why_unfair": |
+          % if overpayment_pay_less_reasons['unfair']: 
+          ${ overpayment_why_unfair }
+          % endif
       - "overpayment_thought_qualified":  ${ overpayment_pay_less_reasons['thought_disabled'] }
       - "overpayment_still_18": ${ overpayment_pay_less_reasons['18_with_ssi'] }
       - "overpayment_other_reason_explain": |
@@ -2011,33 +1917,6 @@ attachments:
             % if receives_benefits and receives_benefits_type_options['VA']:
             ${ receives_benefits_claim_number }
             % endif
-      - "possessed_money_yes": ${ possessed_overpayment_at_notice }
-      - "possessed_money_no": ${ not possessed_overpayment_at_notice }
-      - "possessed_money_amount": ${currency(possessed_overpayment_at_notice_amount, decimals=False) if possessed_overpayment_at_notice else ''}
-      - "possess_money_yes__1": ${ possess_overpayment }
-      - "possess_money_no__1": ${ not possess_overpayment }
-      - "possess_money_amount__1":  ${currency(possess_overpayment_amount, decimals=False) if possess_overpayment else ''}
-      - "received_real_estate_yes": ${ received_real_estate }
-      - "received_real_estate_no": ${ not received_real_estate }
-      - "received_real_estate_value": |
-            % if received_real_estate:
-            ${ received_real_estate_amount }
-            % endif
-      - "gave_away_real_estate_yes": ${ gave_away_real_estate } 
-      - "gave_away_real_estate_no": ${ not gave_away_real_estate }
-      - "gave_away_real_estate_amount": ${ gave_away_real_estate_amount }
-      - "sold_yes": ${ sold_real_estate }
-      - "sold_no": ${ not sold_real_estate }
-      - "sold_amount": |
-            % if sold_real_estate:
-            ${ sold_real_estate_amount }
-            % endif
-      - "gave_away_cash_yes": ${ gave_cash_after_notice }
-      - "gave_away_cash_no": ${ not gave_cash_after_notice }
-      - "gave_away_cash_amount": ${ currency(gave_away_cash_amount) }
-      - "got_cash_yes": ${ received_cash_after_notice }
-      - "got_cash_no": ${ not received_cash_after_notice }
-      - "got_cash_amount": ${ currency(got_cash_amount) }
       - "dependent_1": ${household.item(0)}
       - "dependent_1_age": ${household.item(0).age}
       - "dependent_1_relationship": ${household.item(0).relationship}

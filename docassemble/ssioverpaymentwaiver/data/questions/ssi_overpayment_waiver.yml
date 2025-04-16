@@ -139,6 +139,9 @@ code: |
     preview_pdf
     download_pdf
     
+  if notice_overpayment_amount <= 1000:
+    total_over_one_thousand
+  
   payment_type
   overpayment_reason
   # overpayment_explanation
@@ -154,14 +157,11 @@ code: |
   
   overpayment_pay_less_reasons
   cant_pay_at_all
-  overpayment_waiver_second_request
-  first_overpayment
   will_receive_inheritance
+  receives_ssi_benefits
   
   nav.set_section('Financial information')
-  evaluate_if_receives_benefits # We may already know--use code to set if true
-  if receives_benefits:
-    receives_benefits_type
+  if receives_ssi_benefits:
     cash_amount = DAEmpty()
     vehicles = DAEmpty()
     household.jobs = DAEmpty()
@@ -199,10 +199,10 @@ code: |
     if non_cash_assets or vehicles.there_are_any or real_estate.there_are_any:
       assets_cannot_be_sold
     if expenses_exceed_income:
-      expenses_exceed_income_explanation
-    authorize_disclosure_to_ssa      
+      expenses_exceed_income_explanation    
     
   nav.set_section('Finishing up')
+  authorize_disclosure_to_ssa  
   client.address.address
   ssa_office.address.address  
   preview_pdf
@@ -219,7 +219,6 @@ code: |
     'cant_pay_at_all': showifdef("cant_pay_at_all"),
     'informed_ssa': showifdef("informed_ssa"),
     'first_overpayment': showifdef("first_overpayment"),
-    'receives_benefits': showifdef("receives_benefits"),
     'date':today(),
     })  
   download_pdf
@@ -334,6 +333,19 @@ fields:
     help: |
       Add up the amount you were overpaid each month and put the total here -              *example* $10000
     show if: client_has_overpayment_notice
+---
+id: total_over_one_thousand
+question: |
+  Call Social Security to handle your waiver request more quickly
+subquestion: |
+  Since the total amount you were overpaid is $1000 or less, Social Security can       handle your waiver request more quickly over the phone. You can call your local      social security office or 1-800-772-1213 to request a waiver instead of completing   the rest of this form.
+buttons:
+  - Keep going:
+      code: |
+        total_over_one_thousand = True  
+  - Exit: exit
+    url: https://secure.ssa.gov/ICON/main.jsp
+    
 ---
 id: will_receive_inheritance
 question: |
@@ -459,18 +471,6 @@ continue button field: saw_signature_qrcode
 ---
 code: |
   has_sellable_assets = vehicles.there_are_any or real_estate.there_are_any
----
-code: |
-  if recordee.name.full() == client.name.full() and payment_type['SSI']:
-    we_think_recordee_is_client = True
-    receives_benefits = True
-    receives_benefits_type_options = 'SSI'
-    receives_benefits_type = 'SSI'
-    #receives_ssi = True
-    #received_ssi = False
-  else:
-    we_think_recordee_is_client = False
-  evaluate_if_receives_benefits = True
 ---
 id: intro
 question: |
@@ -774,51 +774,33 @@ fields:
     datatype: currency
     step: 1
     show if: possessed_overpayment_at_notice
-    
 ---
-id: receives benefits
+id: receives_ssi_benefits
 question: |
-  Are you currently receiving any needs-based cash benefits?
-subquestion: |
-  Answer yes if you personally receive cash welfare benefits, SSI, or a state cash 
-  benefit that is based on your need.
-field:  receives_benefits  
-choices:
-  - Yes: True
-  - No: False
+  Are you receiving SSI benefits?
+fields: 
+  - no label: receives_ssi_benefits  
+    datatype: radio
+    choices:
+     - Yes: receiving_ssi
+     - No: receiving_ssi_no
+  - Are you or someone you support receiving any of the following benefits?: receive_benefits
+    datatype: radio
+    show if:
+      variable: receives_ssi_benefits
+      is: No
+    choices: 
+      - Yes: receive_benefits_yes
+      - No: receive_benefits_no
 help: |
   If you are receiving SSI or another benefit based on your need, you do not need
-  to give the Social Security Administration as much information about your finances.
----
-id: benefits kind
-question: |
-  What kind of cash benefits are you receiving?
-fields: 
-  - no label: receives_benefits_type_options
-    datatype: checkboxes
-    choices:
-      - SSI: SSI
-      - EAEDC: EAEDC
-      - TAFDC (Temporary Aid to Families with Dependent Children): TAFDC
-      - VA Benefits: VA
-      - Other: other
-    none of the above: False      
-  - Name of benefits program: receives_benefits_other
-    show if: receives_benefits_type_options['other']
-  - What is the account or claim number for your benefits?: receives_benefits_claim_number
-
----
-code: |
-  if receives_benefits_type_options['SSI'] or receives_benefits_type_options['TAFDC'] or receives_benefits_type_options['EAEDC']:
-    receives_benefits_type = receives_benefits_type_options.true_values()
-  else:
-    receives_benefits_type = receives_benefits_other
+  to give the Social Security Administration as much information about your            finances. Make sure you attach proof of your benefits.
 ---
 id: dont need financial statement explanation
 question: |
   You don't need to give us your financial information
 subquestion: |
-  Because you are receiving ${receives_benefits_type}, you don't need to answer the
+  Because you are receiving benefits, you don't need to answer the
   financial questions on this form. We'll finish asking for your contact information
   and signature on the next few pages.
 field: dont_need_financials_explanation
@@ -903,17 +885,12 @@ fields:
     choices:
       - I cannot afford to pay back the money: cannot_afford
       - The overpayment was not my fault: not_my_fault
-      - Requiring me to pay back the overpayment is unfair: unfair
-      - I thought I still had a disability that would make me eligible for benefits. I filed an appeal and I fully cooperated with Social Security.: thought_disabled
-      - I was age 18 and receiving SSI when the overpayment occurred.: 18_with_ssi
-      - Other: other
+      - Requiring me to pay back the overpayment is unfair for other reasons: unfair
     none of the above: False
   - Why is it unfair to ask you to pay back the overpayment?: overpayment_why_unfair
     datatype: area
     show if: overpayment_pay_less_reasons['unfair']
-    #maxlength: 70
-  - Other reason: overpayment_other_reason_explain
-    show if: overpayment_pay_less_reasons['other']
+    maxlength: 70
 ---
 code: |
   overpayment_not_my_fault = overpayment_pay_less_reasons['not_my_fault']
@@ -921,18 +898,21 @@ code: |
 ---
 id: amount can pay
 question: |
-  Are you asking the Social Security Administration to waive the entire amount you owe?
-field: cant_pay_at_all
-choices:
-  - Yes: True
-  - No: False
----
-id: overpayment_waiver_second_request
-question: |
-  Have you ever asked the Social Security Administration to waive this overpayment before?
-fields:
-  - no label: overpayment_waiver_second_request
-    datatype: yesnoradio
+  Are you asking the Social Security Administration to waive the entire amount you     owe, including any money you may have already paid back to them?
+fields: 
+  - no label: cant_pay_at_all
+    datatype: radio
+    choices:
+     - Yes: True
+     - No: False
+  - Are you asking the Social Security administration to waive the rest of the money that you still owe?: waive_remaining
+    datatype: radio
+    show if: 
+      variable: cant_pay_at_all
+      is: False
+    choices:
+     - Yes: waive_remaining_amount
+     - No: waive_remaining_amount_no
 ---
 #id: ssi payment status
 #question: |
@@ -952,7 +932,7 @@ subquestion: |
   says you were overpaid?
 fields:
   - no label: overpayment_reason
-    input type: radio
+    datatype: radio
     code: |
       overpayment_reason_choices
   - What was the reason?: overpayment_reason_other_explain
@@ -1243,17 +1223,16 @@ question: |
   Follow-up
 subquestion: |
   % if overpayment_reason == 'dont_know' or overpayment_reason == 'something_else':
-  You said that you contacted the Social Security Administration to let them know that you were overpaid.
+  You said that you contacted the Social Security Administration to let them know      that you were overpaid.
   % else:
-  You said that you contacted the Social Security Administration about the reason that you
-  were overpaid.
+  You said that you contacted the Social Security Administration about the reason      that you were overpaid.
   % endif
 fields:
   - label: |
       % if overpayment_reason == 'dont_know' or overpayment_reason == 'something_else':
-      After you reported the overpayment, did the Social Security Administration change your benefits amount?
+      After you reported the overpayment, did the Social Security Administration           change your benefits amount?
       % else:
-      After you told Social Security "${overpayment_reason_plain_text}," did the Social Security Administration change your benefits amount?
+      After you told Social Security ${overpayment_reason_plain_text} did the              Social Security Administration change your benefits amount?
       % endif
     field: benefits_changed_after_contact
     datatype: yesnoradio
@@ -1261,25 +1240,6 @@ fields:
     datatype: yesnoradio
     show if:  
       variable: benefits_changed_after_contact
-      is: False
----
-id: past overpayments
-question: |
-  Past overpayments
-fields:
-  - Has Social Security ever said you have been overpaid before?: first_overpayment
-    datatype: noyesmaybe
-    # Leaving this logic inverted to reduce scope of wording change
-  - Why were you overpaid in the past?: past_overpayment_explanation
-    datatype: area
-    maxlength: 125
-    show if:
-      variable: first_overpayment
-      is: False
-  - Is the reason similar to the reason you were overpaid the first time?: overpaid_before_same_reason
-    datatype: yesnoradio
-    show if:
-      variable: first_overpayment
       is: False
 ---
 code: |
@@ -1351,8 +1311,7 @@ subquestion: |
   
   ${map_of([office for office in officelist])}
 
-  If there is more than one result, you should choose the office that serves your city
-  or town.
+  If there is more than one result, you should choose the office that serves your      city or town.
   Use the [Office locator](https://secure.ssa.gov/ICON/main.jsp) to find the
   SSA office that serves your city.
   % else:
@@ -1567,6 +1526,7 @@ subquestion: |
 ---
 id: download pdf
 event: download_pdf
+progress: 100
 question: |
   Your form is ready
 subquestion: |
@@ -1609,7 +1569,7 @@ code: |
     new_field.value = overpayment_other_reason_explain
     new_field.overflow_trigger = 0
   
-  if not receives_benefits:
+  if not receives_ssi_benefits:
     if len(household) > 5:    
       new_field = overflow_fields.appendObject()
       new_field.type = 'object_list'
@@ -1713,33 +1673,18 @@ attachments:
     # - "record_ssn": ${ recordee.ssn }
       - "client_is_overpaid_person_yes": ${ client_is_overpaid_person }
       - "client_is_overpaid_no": ${ not client_is_overpaid_person }
-      - "client_relationship_parent": |
+      - "requestor_relationship": |
           % if not client_is_overpaid_person:
-          ${ relationship_to_user['parent'] }
+          ${ str(relationship_to_user.true_values()).replace("_"," ") }
           % endif
-      - "client_relationship_rep_payee": |
+      - "requestor_name": |
           % if not client_is_overpaid_person:
-          ${ relationship_to_user['rep_payee'] }
+          ${ client }
           % endif
-      - "client_relationship_spouse": |
-          % if not client_is_overpaid_person:
-          ${ relationship_to_user['spouse'] }
-          % endif
-      - "client_relationship_legal_guardian": |
-          % if not client_is_overpaid_person:
-          ${ relationship_to_user['legal_guardian'] }
-          % endif
-      - "client_relationship_other": |
-          % if not client_is_overpaid_person:
-          ${ relationship_to_user['other'] }
-          % endif
-      - "client_relationship_other_explanation": |
-          % if not client_is_overpaid_person and relationship_to_user['other']:
-          ${ client_relationship_other_explanation }
-          % endif
-      - "client_name": ${ recordee } # TODO
       - "rep_received_benefits_yes": ${ not client_is_rep_payee } # TODO: is this still correct?
       - "rep_received_benefits_no": ${ client_is_rep_payee }
+      - "total_over_one_thousand": ${ notice_overpayment_amount <= 1000 }
+      - "total_over_one_thousand_no": ${ notice_overpayment_amount > 1000 }|
       - "someone_else_lived_with_user_yes__1": |
           % if not client_is_overpaid_person:
           ${ someone_else_lived_with_user }
@@ -1783,16 +1728,6 @@ attachments:
       # TODO: the variable names don't line up with usage here
       - "client_received_overpaid_money_yes": ${ someone_else_user_received_benefits}
       - "client_received_overpaid_money_no": ${ not someone_else_user_received_benefits }
-      - "situation_client_minor_when_received": ${ situation_at_overpayment['situation_client_minor_when_received'] }
-      - "situation_client_adult_when_received": ${ situation_at_overpayment['situation_client_adult_when_received'] }
-      - "situation_client_getting_disability_benefits_when_overpaid": ${ situation_at_overpayment['situation_client_getting_disability_benefits_when_overpaid'] }
-      - "situation_client_getting_retirement_benefits_when_overpaid": ${ situation_at_overpayment['situation_client_getting_retirement_benefits_when_overpaid'] }
-      - "situation_client_getting_parent_benefits_when_overpaid": ${ situation_at_overpayment['situation_client_getting_parent_benefits_when_overpaid'] }
-      - "situation_client_getting_widow_benefits_when_overpaid": ${ situation_at_overpayment['situation_client_getting_widow_benefits_when_overpaid'] }
-      - "situation_client_getting_spousal_benefits_when_overpaid": ${ situation_at_overpayment['situation_client_getting_spousal_benefits_when_overpaid'] }
-      - "situation_client_getting_ssi_benefits_when_overpaid": ${ situation_at_overpayment['situation_client_getting_ssi_benefits_when_overpaid'] }
-      - "situation_none_of_above_explain": ${ showifdef("situation_none_of_above_explain") }
-      - "situation_none_of_above": ${ situation_at_overpayment.all_false() }
       - "overpayment_not_my_fault": ${overpayment_pay_less_reasons['not_my_fault'] } # TODO
       - "overpayment_cannot_afford": ${ overpayment_pay_less_reasons['cannot_afford'] }
       - "overpayment_unfair":  ${ overpayment_pay_less_reasons['unfair'] }
@@ -1802,13 +1737,16 @@ attachments:
           % endif
       - "overpayment_thought_qualified":  ${ overpayment_pay_less_reasons['thought_disabled'] }
       - "overpayment_still_18": ${ overpayment_pay_less_reasons['18_with_ssi'] }
-      - "overpayment_other_reason_explain": |
-          % if overpayment_pay_less_reasons.all_false():
+      - "overpayment_reason_other_explain": |
+          % if overpayment_reason == 'something_else':
           ${ overpayment_other_reason_explain }
-          % endif
+          % endif 
+          ${ overpayment_reason_plain_text } 
       - "overpayment_other_reason": ${ overpayment_pay_less_reasons.all_false() }
       - "overpayment_waive_everything_yes": ${ cant_pay_at_all }
       - "overpayment_waive_everything_no": ${ not cant_pay_at_all }
+      - "waive_remaining_amount": ${ waive_remaining_amount }
+      - "waive_remaining_amount_no": ${ waive_remaining_amount_no }
       - "overpayment_waiver_second_request_no": ${ overpayment_waiver_second_request }
       - "overpayment_waiver_second_request_yes": ${ not overpayment_waiver_second_request }
       - "client_has_overpayment_notice_yes": ${ client_has_overpayment_notice }
@@ -1833,28 +1771,6 @@ attachments:
           % if client_has_overpayment_notice:
           ${ thousands(notice_overpayment_amount) }
           % endif
-      - "overpayment_reason_income_too_high": ${ overpayment_reason['worked_many_hours']}
-      - "overpayment_reason_household_income_too_high": ${ overpayment_reason['household_too_much_income']}
-      - "overpayment_reason_savings_too_high": ${ overpayment_reason['money_in_bank']}
-      - "overpayment_reason_got_help": ${ overpayment_reason['help_food_shelter']}
-      - "overpayment_reason_double_benefits": ${ overpayment_reason['double_payment']}
-      - "overpayment_reason_not_disabled": ${ overpayment_reason['not_disabled']}
-      - "overpayment_reason_marital_status": ${ overpayment_reason['marriage_divorce']}
-      - "overpayment_reason_workers_comp": ${ overpayment_reason['workers_comp']}
-      - "overpayment_reason_nursing_home": ${ overpayment_reason['nursing_home']}
-      - "overpayment_reason_jail": ${ overpayment_reason['jail_prison']}
-      - "overpayment_reason_outside_us": ${ overpayment_reason['out_of_country']}
-      - "overpayment_reason_immigration_status": ${ overpayment_reason['immigration_status']}
-      - "overpayment_reason_another_entitlee": ${ overpayment_reason['other_entitlee']}
-      - "overpayment_reason_attorney_fee_not_withheld": ${ overpayment_reason['attorney_fee']}
-      - "overpayment_reason_student_status": ${ overpayment_reason['not_student']}
-      - "overpayment_reason_dependent_child_status": ${ overpayment_reason['no_child']}
-      - "overpayment_reason_other": ${ overpayment_reason['something_else']}
-      - "overpayment_reason_other_explain": |
-            % if overpayment_reason['something_else']:
-            ${ overpayment_reason_other_explain }
-            % endif
-      - "overpayment_reason_unknown": ${ overpayment_reason['dont_know'] }
       - "client_understands_reporting_rules_yes": ${ client_understands_reporting_rules }
       - "client_understands_reporting_rules_no": ${ not client_understands_reporting_rules}
       - "client_understands_reporting_rules_no_explain": |
@@ -1903,20 +1819,10 @@ attachments:
             ${ not overpaid_before_same_reason }
             % endif
       - "overpaid_before_same_reason_unknown": ${ first_overpayment is None }
-      - "receiving_ssi": ${receives_benefits_type_options['SSI']}
-      - "receiving_tanf": ${ receives_benefits_type_options['TAFDC'] }
-      - "tanf_claim_number": |
-            % if receives_benefits and receives_benefits_type_options['TAFDC']:
-            ${ receives_benefits_claim_number }
-            % endif
-      - "receiving_va_benefits": |
-            % if receives_benefits:
-            ${ receives_benefits_type_options['VA'] }
-            % endif
-      - "va_benefits_number": |
-            % if receives_benefits and receives_benefits_type_options['VA']:
-            ${ receives_benefits_claim_number }
-            % endif
+      - "receiving_ssi": ${ receiving_ssi }
+      - "receiving_ssi_no": ${ receiving_ssi_no }
+      - "receive_support_yes": ${ receive_benefits_yes }
+      - "receive_support_no": ${ receive_benefits_no } 
       - "dependent_1": ${household.item(0)}
       - "dependent_1_age": ${household.item(0).age}
       - "dependent_1_relationship": ${household.item(0).relationship}

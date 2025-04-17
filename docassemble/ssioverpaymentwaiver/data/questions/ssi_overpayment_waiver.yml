@@ -127,6 +127,9 @@ code: |
     
   nav.set_section('Information about the overpayment')
   client_has_overpayment_notice
+
+  if client_has_overpayment_notice:
+    overpayment_notice_date
   
   client_goals
   if only_change_monthly_due:
@@ -161,7 +164,7 @@ code: |
   receives_ssi_benefits
   
   nav.set_section('Financial information')
-  if receives_ssi_benefits:
+  if receives_ssi_benefits == 'yes':
     cash_amount = DAEmpty()
     vehicles = DAEmpty()
     household.jobs = DAEmpty()
@@ -194,10 +197,8 @@ code: |
     cash_amount
     financial_statement_questions
     assets.there_are_any
-    #if assets.there_are_any:
-    #  accounts_special_purpose
     if non_cash_assets or vehicles.there_are_any or real_estate.there_are_any:
-      assets_cannot_be_sold
+      assets_can_be_sold
     if expenses_exceed_income:
       expenses_exceed_income_explanation    
     
@@ -308,31 +309,31 @@ question: |
   Do you have the notice from Social Security administration with you?
 progress: 10
 help: |
-      To find this information, look for the notice from Social Security that says         you owe them money
+  Look for the notice from Social Security that says you owe them money
 fields:
   - no label: client_has_overpayment_notice
     datatype: yesnoradio
+---
+id: overpayment_notice_information
+question: |
+   What does the notice from Social Security say about the overpayment?
+fields:
   - What is the __date__ on the notice?: overpayment_notice_date
     datatype: date
-    show if: client_has_overpayment_notice
   - What is the __first__ month you were overpaid?: overpayment_notice_first_overpayment
     help: |
       Include the year and month of your __first__ overpayment - *example*: 01/2024
-    show if: client_has_overpayment_notice
   - What is the __last__ month you were overpaid?: overpayment_notice_last_overpayment
-    show if: client_has_overpayment_notice
     help: |
       Include the year and month of your __last__ overpayment - *example*: 06/2024
-  - If you were only overpaid for one month, what is the month?: overpayment_notice_exact_month
+  - If you were only overpaid for one month what is the month?: overpayment_notice_exact_month
     required: False  
     help: |
-      Only answer here if you were overpaid for 1 month. Include the year and month        of the only month you were overpaid - *example* 04/2024
-    show if: client_has_overpayment_notice    
-  - What is the total dollar amount you were overpaid?:                   notice_overpayment_amount
+      Only answer here if you were overpaid for 1 month. Include the year and month        of the only month you were overpaid - *example* 04/2024    
+  - What is the total dollar amount you were overpaid?: notice_overpayment_amount
     datatype: currency
     help: |
       Add up the amount you were overpaid each month and put the total here -              *example* $10000
-    show if: client_has_overpayment_notice
 ---
 id: total_over_one_thousand
 question: |
@@ -784,14 +785,14 @@ fields:
     choices:
      - Yes: receiving_ssi
      - No: receiving_ssi_no
-  - Are you or someone you support receiving any of the following benefits?: receive_benefits
+  - Are you or someone you support receiving benefits from SSI TANF or a VA Pension?: receive_benefits
     datatype: radio
     show if:
       variable: receives_ssi_benefits
       is: No
     choices: 
-      - Yes: receive_benefits_yes
-      - No: receive_benefits_no
+      - Yes: True
+      - No: False
 help: |
   If you are receiving SSI or another benefit based on your need, you do not need
   to give the Social Security Administration as much information about your            finances. Make sure you attach proof of your benefits.
@@ -911,8 +912,8 @@ fields:
       variable: cant_pay_at_all
       is: False
     choices:
-     - Yes: waive_remaining_amount
-     - No: waive_remaining_amount_no
+     - Yes: True
+     - No: False
 ---
 #id: ssi payment status
 #question: |
@@ -1263,6 +1264,17 @@ fields:
     show if: assets_cannot_be_sold
     maxlength: 174
 ---
+id: able to sell assets
+question: |
+  Can you sell or liquidate any of the assets you listed?
+fields:
+  - no label: assets_can_be_sold
+    datatype: yesnoradio
+  - Explain more: can_sell_explanation
+    datatype: area
+    show if: assets_can_be_sold
+    maxlength: 150
+---
 id: contact information
 generic object: Individual
 question: |
@@ -1390,6 +1402,7 @@ content: |
   ${interview_url()}
 ---
 id: signature
+progress: 95
 question: Sign below
 subquestion: |
 signature: client.signature
@@ -1511,6 +1524,7 @@ fields:
 ---
 id: preview pdf
 continue button field: preview_pdf
+progress: 90
 question: |
   Review your form
 subquestion: |
@@ -1745,8 +1759,8 @@ attachments:
       - "overpayment_other_reason": ${ overpayment_pay_less_reasons.all_false() }
       - "overpayment_waive_everything_yes": ${ cant_pay_at_all }
       - "overpayment_waive_everything_no": ${ not cant_pay_at_all }
-      - "waive_remaining_amount": ${ waive_remaining_amount }
-      - "waive_remaining_amount_no": ${ waive_remaining_amount_no }
+      - "waive_remaining_amount": ${ waive_remaining }
+      - "waive_remaining_amount_no": ${ not waive_remaining }
       - "overpayment_waiver_second_request_no": ${ overpayment_waiver_second_request }
       - "overpayment_waiver_second_request_yes": ${ not overpayment_waiver_second_request }
       - "client_has_overpayment_notice_yes": ${ client_has_overpayment_notice }
@@ -1819,8 +1833,8 @@ attachments:
             ${ not overpaid_before_same_reason }
             % endif
       - "overpaid_before_same_reason_unknown": ${ first_overpayment is None }
-      - "receiving_ssi": ${ receiving_ssi }
-      - "receiving_ssi_no": ${ receiving_ssi_no }
+      - "receiving_ssi": ${ receiving_ssi_benefits }
+      - "receiving_ssi_no": ${ not receiving_ssi_benefits }
       - "receive_support_yes": ${ receive_benefits_yes }
       - "receive_support_no": ${ receive_benefits_no } 
       - "dependent_1": ${household.item(0)}
@@ -1852,6 +1866,7 @@ attachments:
             % if non_tax_dependent and non_tax_dependent_contributes_to_expenses:
             ${ currency(non_tax_dependent_contributes_to_expenses_amount) }
             % endif
+      - "cash_amount": ${ currency(cash_amount) }
       - "account_1_type": ${ assets.item(0).type }
       - "account_1_name_address": ${ assets.item(0).institution_name } ${ assets.item(0).institute_address } 
       - "account_1_owner": ${ assets.item(0).owner }
@@ -2051,6 +2066,9 @@ attachments:
       - "financial_situation_will_change_no": ${ not will_receive_inheritance }
       - "financial_situation_will_change_explanation": ${ will_receive_inheritance_explanation }
       - "assets_grand_total": ${ assets.total() }
+      - "can_sell_yes": ${ assets_can_be_sold }
+      - "can_sell_no": ${ not assets_can_be_sold }
+      - "can_sell_explanation": ${ can_sell_explanation}
       - "cant_convert_countable_asset_yes": ${yesno(assets_cannot_be_sold) if non_cash_assets else ''}
       - "cant_convert_countable_asset_no": ${noyes(assets_cannot_be_sold) if non_cash_assets else ''}
       - "cant_convert_countable_asset_explanation": ${assets_cannot_be_sold_explanation if non_cash_assets and assets_cannot_be_sold else ''}
@@ -2062,8 +2080,8 @@ attachments:
       - "user_mailing_address": ${ client.address.block() }
       - "signature_date": ${ today() }
       - "legal_representative_signature": |
-          ${ client.signature }
-      - "legal_representative_mailing_address": something
+          ${ showifdef('client.signature') }
+      - "legal_representative_mailing_address": ${ client.address.zip }
       - "signature_date_2": ${ today() }
       - "user_signature": |
           ${ showifdef('client.signature') }

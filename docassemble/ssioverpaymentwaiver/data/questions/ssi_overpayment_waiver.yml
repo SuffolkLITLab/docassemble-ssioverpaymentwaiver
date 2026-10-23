@@ -1077,7 +1077,6 @@ question: |
   Did something stop you from being able to report changes to the Social Security Administration?
 fields: 
   - no label: client_prevented_from_reporting_other
-    datatype: yesno
     input type: radio
     choices:
       - Yes: True
@@ -1172,7 +1171,7 @@ subquestion: |
   % endif
 fields:
   - label: |
-      Did you tell the Social Security Administration about the change or event that       made you overpaid?
+      Did you tell the Social Security Administration about the change or event that made you overpay?
     field: informed_ssa
     datatype: yesnoradio
   - Why not?: did_not_inform_ssa_explanation
@@ -1185,10 +1184,10 @@ fields:
   - When? List any dates: told_ssa_dates
     maxlength: 80
     required: False
-    show if: informed_ssa == 'True'
+    show if: informed_ssa
   - How?: told_ssa_how
     required: False
-    show if: informed_ssa == 'True'
+    show if: informed_ssa
     datatype: checkboxes
     choices:
       - Phone: phone
@@ -1201,7 +1200,7 @@ fields:
     datatype: area
     maxlength: 344
     show if: told_ssa_how['other']
-  - Do you have any copies of letters or other proof that you told the Social            Security Administration about the change?: told_ssa_documentation
+  - Do you have any copies of letters or other proof that you told the Social Security Administration about the change?: told_ssa_documentation
     datatype: yesnoradio
     show if:
       variable: informed_ssa
@@ -1212,7 +1211,7 @@ fields:
     show if: 
       variable: told_ssa_documentation
       is: True
-  - Why not?: told_ssa_documentation_explain_why_cant_send
+  - Why do you not?: told_ssa_documentation_explain_why_cant_send
     datatype: area
     rows: 2
     maxlength: 160
@@ -1343,7 +1342,9 @@ fields:
       lambda y: (y.address.on_one_line(show_country=False))
   - note: |
       Choose an office above, or use the [Office locator](https://secure.ssa.gov/ICON/main.jsp)
-    show if: found_offices
+    show if:
+      code: |
+        found_offices
   - Address: ssa_office.address.address
   - Suite: ssa_office.address.unit
     required: False

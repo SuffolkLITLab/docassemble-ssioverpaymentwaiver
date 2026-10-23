@@ -490,8 +490,8 @@ fields:
   - Kind of utilities: expenses[i].utility_kind
     required: False
     show if:
-      code: |
-        expenses[i].type == 'utilities'      
+      variable: expenses[i].type
+      is: utilities   
   - Amount: expenses[i].value
     datatype: currency
   - How often do you pay this amount?: expenses[i].period
